@@ -4,6 +4,7 @@
 // system includes
 #include <string>
 #include <istream>
+#include <vector>
 
 
 // module includes
@@ -17,7 +18,6 @@
 // eval method, updates Environment, returns last result
 class Interpreter{
 public:
-
   bool parse(std::istream & expression) noexcept;
   Expression eval();
 
@@ -26,11 +26,12 @@ public:
   Expression parseExpression(TokenIteratorType& token, TokenIteratorType end);
   Expression evaluateExpression(const Expression& expr);
   void resetEnvironment();
-  
+  bool isSymbolStringDefined(std::string variable);
 
-private:
+protected:
   Environment env;
   Expression ast;
+  std::vector<Atom> graphics;
 };
 
 

@@ -1,42 +1,63 @@
 #include "expression.hpp"
 
-#include <cmath>
-#include <limits>
-#include <cctype>
 
 // system includes
 #include <sstream>
+#include <cmath>
+#include <limits>
+#include <cctype>
+#include <tuple>
 #include <iostream>
-using namespace std;
 
-//Boolean expression constructor
 Expression::Expression(bool tf)
 {
 	head.type = BooleanType;
 	head.value.bool_value = tf;
 }
 
-//Number expression constructor
 Expression::Expression(double num)
 {
 	head.type = NumberType;
 	head.value.num_value = num;
 }
 
-//Symbol expression constructor
 Expression::Expression(const std::string & sym)
 {
 	head.type = SymbolType;
 	head.value.sym_value = sym;
 }
 
-//Equality operator function
-//Returns a bool value for a comparison between two expression objects 
-//that have the same type. 
-bool Expression::operator==(const Expression& exp) const noexcept
-{	
+Expression::Expression(std::tuple<double,double> value)
+{
+	head.type = PointType;
+	head.value.point_value.x = std::get<0>(value);
+	head.value.point_value.y = std::get<1>(value);
+}
+
+Expression::Expression(std::tuple<double,double> start,  std::tuple<double,double> end)
+{
+	head.type = LineType;
+	head.value.line_value.first.x = std::get<0>(start);
+	head.value.line_value.first.y = std::get<1>(start);
+	head.value.line_value.second.x = std::get<0>(end);
+	head.value.line_value.second.y = std::get<1>(end);
+}
+
+
+Expression::Expression(std::tuple<double,double> center, std::tuple<double,double> start, double angle)
+{
+	head.type = ArcType;
+	head.value.arc_value.center.x = std::get<0>(center);
+	head.value.arc_value.center.y = std::get<1>(center);
+	head.value.arc_value.start.x = std::get<0>(start);
+	head.value.arc_value.start.y = std::get<1>(start);
+	head.value.arc_value.span = angle;
+}
+
+bool Expression::operator==(const Expression & exp) const noexcept
+{
 	// Compare types
-	if (head.type != exp.head.type) 
+	if (head.type != exp.head.type)
 	{
 		return false;
 	}
@@ -47,7 +68,7 @@ bool Expression::operator==(const Expression& exp) const noexcept
 		return true;
 	}
 
-	switch (head.type) 
+	switch (head.type)
 	{
 	case BooleanType:
 		return head.value.bool_value == exp.head.value.bool_value;
@@ -56,6 +77,15 @@ bool Expression::operator==(const Expression& exp) const noexcept
 		return std::abs(head.value.num_value - exp.head.value.num_value) <= std::numeric_limits<double>::epsilon();
 	case SymbolType:
 		return head.value.sym_value == exp.head.value.sym_value;
+	case PointType:
+		return head.value.point_value == exp.head.value.point_value;
+	case LineType:
+		return (head.value.line_value.first == exp.head.value.line_value.first) &&
+			(head.value.line_value.second == exp.head.value.line_value.second);
+	case ArcType:
+		return (head.value.arc_value.center == exp.head.value.arc_value.center) &&
+			(head.value.arc_value.start == exp.head.value.arc_value.start) &&
+			(fabs(head.value.arc_value.span - exp.head.value.arc_value.span) < std::numeric_limits<double>::epsilon());
 	default:
 		std::cerr << "ERROR: Invalid type " << std::endl;
 		return false; // Invalid type
@@ -63,8 +93,7 @@ bool Expression::operator==(const Expression& exp) const noexcept
 	return true;
 }
 
-//Operator for printing out expressions based on type
-std::ostream& operator<<(std::ostream& out, const Expression& exp) 
+std::ostream & operator<<(std::ostream & out, const Expression & exp)
 {
 	if (exp.tail.empty())
 	{
@@ -79,6 +108,18 @@ std::ostream& operator<<(std::ostream& out, const Expression& exp)
 		else if (exp.head.type == SymbolType)
 		{
 			out << exp.head.value.sym_value;
+		}
+		else if (exp.head.type == PointType) 
+		{
+			out << "(" << exp.head.value.point_value.x << "," << exp.head.value.point_value.y << ")";
+		}
+		else if (exp.head.type == LineType) 
+		{
+			out << "((" << exp.head.value.line_value.first.x << "," << exp.head.value.line_value.first.y << ")," << "(" << exp.head.value.line_value.second.x << "," << exp.head.value.line_value.second.y << "))";
+		}
+		else if (exp.head.type == ArcType) 
+		{
+			out << "((" << exp.head.value.arc_value.center.x << "," << exp.head.value.arc_value.center.y << ")," << "(" << exp.head.value.arc_value.start.x << "," << exp.head.value.arc_value.start.y << ")," << exp.head.value.arc_value.span << ")";
 		}
 	}
 	else
@@ -96,60 +137,61 @@ std::ostream& operator<<(std::ostream& out, const Expression& exp)
 	return out;
 }
 
-
-//  Function to convert a given token into an atom based on type,
-//  return true if a token is valid. otherwise, return false.
-
-/* 
-*  -If the token is "True" or "False," it's converted to a Boolean Atom.
-*  -If the token is numeric(integer or floating - point), it's converted to a Number Atom.
-*  -If the token is a string, it's considered a Symbol and converted accordingly.
-*/
-bool token_to_atom(const std::string& token, Atom& atom)
+bool token_to_atom(const std::string & token, Atom & atom)
 {
-	if (token == " ")
+	if (token.empty() || token == " ")
+	{
 		return false;
+	}
 
 	if (token == "True")
 	{
 		atom.type = BooleanType;
 		atom.value.bool_value = true;
 	}
-	else if (token == "False") 
+	else if (token == "False")
 	{
 		atom.type = BooleanType;
 		atom.value.bool_value = false;
 	}
-	else if (std::isdigit(token[0]) || (token[0] == '-' && std::isdigit(token[1]))) 
+	else
 	{
-		if (token.size() > 1)
+		// Attempt to parse the token as a double, checking for invalid characters
+		try
 		{
-			for (int i = 1; i < token.size(); i++)
+			std::size_t pos = 0; // Position of the character following the last character interpreted
+			double num = std::stod(token, &pos);
+
+			// Check if the entire string was consumed, with no leftover characters
+			if (pos != token.size())
 			{
-				if (isalpha(token[i]) && token[i] != 'e' && token[i] != '+' && token[i] != '-')
-				{
-					return false;
-				}
-				else
-				{
-					atom.type = NumberType;
-					atom.value.num_value = std::stod(token);
-					return true;
-				}
+				// If not all characters were used, it's an invalid number token
+				throw std::invalid_argument("");
+			}
+
+			atom.type = NumberType;
+			atom.value.num_value = num;
+		}
+		catch (const std::invalid_argument&)
+		{
+			// If it's not a valid number, then it's a symbol
+			// But first, we need to ensure it's a valid symbol (e.g., doesn't start with a digit or isn't a floating point)
+			if (std::isdigit(token[0]) == 0 && token.find('.') == std::string::npos)
+			{
+				atom.type = SymbolType;
+				atom.value.sym_value = token;
+			}
+			else
+			{
+				return false; // Invalid token
 			}
 		}
-		else
+		catch (const std::out_of_range&)
 		{
-			atom.type = NumberType;
-			atom.value.num_value = std::stod(token);
-			return true;
+			// The number is out of the range of representable values by a double
+			return false;
 		}
 	}
-	else 
-	{
-		atom.type = SymbolType;
-		atom.value.sym_value = token;
-	}
-	return true;
+	return true; // Valid token
 }
 

@@ -1,16 +1,14 @@
 #include "environment.hpp"
-#include "interpreter_semantic_error.hpp"
 
 #include <cassert>
 #include <cmath>
 
-#include "environment.hpp"
 #include "interpreter_semantic_error.hpp"
 
 //Functon that handles a logical negation procedure
 Expression notProcedure(const std::vector<Atom>& args)
 {
-    if (args.size() != 1 || args[0].type != BooleanType) 
+    if (args.size() != 1 || args[0].type != BooleanType)
     {
         throw InterpreterSemanticError("Error: Invalid argument for not");
     }
@@ -20,13 +18,21 @@ Expression notProcedure(const std::vector<Atom>& args)
 //Functon that handles a logical AND procedure
 Expression andProcedure(const std::vector<Atom>& args)
 {
+    if (args.size() < 2)
+    {
+        throw InterpreterSemanticError("Error: Too few arguments for AND");
+    }
+
     for (const auto& arg : args)
     {
-        if (arg.type != BooleanType || args.size() < 2)
+        if (arg.type != BooleanType)
         {
-            throw InterpreterSemanticError("Error: Invalid argument for and");
+            throw InterpreterSemanticError("Error: Invalid argument for AND");
         }
-        if (!arg.value.bool_value) 
+    }
+    for (const auto& arg : args)
+    {
+        if (!arg.value.bool_value)
         {
             return Expression(false);
         }
@@ -35,19 +41,28 @@ Expression andProcedure(const std::vector<Atom>& args)
 }
 
 //Functon that handles a logical OR procedure
-Expression orProcedure(const std::vector<Atom>& args) 
+Expression orProcedure(const std::vector<Atom>& args)
 {
+    if (args.size() < 2)
+    {
+        throw InterpreterSemanticError("Error: Too few arguments for OR");
+    }
+
     for (const auto& arg : args)
     {
-        if (arg.type != BooleanType || args.size() < 2)
+        if (arg.type != BooleanType)
         {
-            throw InterpreterSemanticError("Error: Invalid argument for or");
+            throw InterpreterSemanticError("Error: Invalid argument type for or");
         }
-        if (arg.value.bool_value) 
+    }
+    for (const auto& arg : args)
+    {
+        if (arg.value.bool_value)
         {
             return Expression(true);
         }
     }
+
     return Expression(false);
 }
 
@@ -55,7 +70,7 @@ Expression orProcedure(const std::vector<Atom>& args)
 Expression ADDProcedure(const std::vector<Atom>& args)
 {
     double sum = 0.0;
-    for (const auto& arg : args) 
+    for (const auto& arg : args)
     {
         if (arg.type != NumberType || args.size() < 2)
         {
@@ -67,37 +82,43 @@ Expression ADDProcedure(const std::vector<Atom>& args)
 }
 
 //Functon that handles an arithmetic subtract procedure
-Expression subtractProcedure(const std::vector<Atom>& args) 
+Expression subtractProcedure(const std::vector<Atom>& args)
 {
-    if (args.size() == 1) 
-    {  // Unary minus
-        if (args[0].type != NumberType) 
+    //Unary minus sign
+    if (args.size() == 1)
+    {
+        if (args[0].type != NumberType)
         {
             throw InterpreterSemanticError("Error: Invalid argument for unary subtraction");
         }
         return Expression(-args[0].value.num_value);
     }
-    else if (args.size() == 2) 
-    {  // Binary subtraction
+
+    //Binary Subtraction 
+    if (args.size() == 2)
+    {
         if (args[0].type != NumberType || args[1].type != NumberType)
         {
             throw InterpreterSemanticError("Error: Invalid arguments for binary subtraction");
         }
         return Expression(args[0].value.num_value - args[1].value.num_value);
     }
-    else 
-    {
-        throw InterpreterSemanticError("Error: Invalid number of arguments for subtraction");
-    }
+
+    throw InterpreterSemanticError("Error: Invalid number of arguments for subtraction");
 }
 
 //Functon that handles an arithmetic multiply procedure
 Expression multiplyProcedure(const std::vector<Atom>& args)
 {
-    double product = 1.0;
-    for (const auto& arg : args) 
+    if (args.size() < 2)
     {
-        if (arg.type != NumberType || args.size() < 2)
+        throw InterpreterSemanticError("Error: Invalid number of arguments for multiplication");
+    }
+
+    double product = 1.0;
+    for (const auto& arg : args)
+    {
+        if (arg.type != NumberType)
         {
             throw InterpreterSemanticError("Error: Invalid argument for multiplication");
         }
@@ -109,7 +130,7 @@ Expression multiplyProcedure(const std::vector<Atom>& args)
 //Functon that handles an arithmetic divide procedure
 Expression divideProcedure(const std::vector<Atom>& args)
 {
-    if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType || args[1].value.num_value == 0) 
+    if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType || args[1].value.num_value == 0)
     {
         throw InterpreterSemanticError("Error: Invalid arguments for division");
     }
@@ -119,7 +140,7 @@ Expression divideProcedure(const std::vector<Atom>& args)
 //Functon that handles a less than comparison procedure
 Expression lessThanProcedure(const std::vector<Atom>& args)
 {
-    if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType) 
+    if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType)
     {
         throw InterpreterSemanticError("Error: Invalid arguments for < operation");
     }
@@ -127,7 +148,7 @@ Expression lessThanProcedure(const std::vector<Atom>& args)
 }
 
 //Functon that handles a less than or equal procedure
-Expression lessThanOrEqualProcedure(const std::vector<Atom>& args) 
+Expression lessThanOrEqualProcedure(const std::vector<Atom>& args)
 {
     if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType)
     {
@@ -147,9 +168,9 @@ Expression greaterThanProcedure(const std::vector<Atom>& args)
 }
 
 //Functon that handles a greater than or equal comparison procedure
-Expression greaterThanOrEqualProcedure(const std::vector<Atom>& args) 
+Expression greaterThanOrEqualProcedure(const std::vector<Atom>& args)
 {
-    if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType) 
+    if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType)
     {
         throw InterpreterSemanticError("Error: Invalid arguments for >= operation");
     }
@@ -157,7 +178,7 @@ Expression greaterThanOrEqualProcedure(const std::vector<Atom>& args)
 }
 
 //Functon that handles an equal comparison procedure
-Expression equalProcedure(const std::vector<Atom>& args) 
+Expression equalProcedure(const std::vector<Atom>& args)
 {
     if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType)
     {
@@ -190,9 +211,125 @@ Expression powProcedure(const std::vector<Atom>& args)
     return Expression(std::pow(args[0].value.num_value, args[1].value.num_value));
 }
 
+// Procedure to create a point
+Expression pointProcedure(const std::vector<Atom>& args) 
+{
+    if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType) 
+    {
+        throw InterpreterSemanticError("Error: Invalid number of arguments for point, expected 2.");
+    }
+    return Expression(std::make_tuple(args[0].value.num_value, args[1].value.num_value));
+}
+
+//Procedure to create a line
+Expression lineProcedure(const std::vector<Atom>& args)
+{
+    if (args.size() != 2 || args[0].type != PointType || args[1].type != PointType)
+    {
+        throw InterpreterSemanticError("Error: Invalid arguments for line, expected two points.");
+    }
+
+    // Extract the points from the arguments
+    Point startPoint = args[0].value.point_value;
+    Point endPoint = args[1].value.point_value;
+
+    // Create a Line object using the two points
+    return Expression(std::make_tuple(startPoint.x, startPoint.y), std::make_tuple(endPoint.x, endPoint.y));
+}
+
+
+//Procedure to create arc
+Expression arcProcedure(const std::vector<Atom>& args)
+{
+    if (args.size() != 3 || args[0].type != PointType || args[1].type != PointType || args[2].type != NumberType)
+    {
+        throw InterpreterSemanticError("Error: Invalid arguments for arc, expected two points and an angle.");
+    }
+
+    // Extract the points and angle from the arguments
+    Point centerPoint = args[0].value.point_value;
+    Point startPoint = args[1].value.point_value;
+    double angle = args[2].value.num_value;
+
+    // Create an Arc object using the two points and the angle
+    return Expression(std::make_tuple(centerPoint.x, centerPoint.y), std::make_tuple(startPoint.x, startPoint.y), angle);
+}
+
+
+
+// Procedure for sin function
+Expression sinProcedure(const std::vector<Atom>& args) 
+{
+    if (args.size() != 1 || args[0].type != NumberType) 
+    {
+        throw InterpreterSemanticError("Error: Invalid number of arguments for sin, expected 1.");
+    }
+    return Expression(std::sin(args[0].value.num_value));
+}
+
+// Procedure for cos function
+Expression cosProcedure(const std::vector<Atom>& args) 
+{
+    if (args.size() != 1 || args[0].type != NumberType) 
+    {
+        throw InterpreterSemanticError("Error: Invalid number of arguments for cos, expected 1.");
+    }
+    return Expression(std::cos(args[0].value.num_value));
+}
+
+// Procedure for arctan function
+Expression arctanProcedure(const std::vector<Atom>& args) 
+{
+    if (args.size() != 2 || args[0].type != NumberType || args[1].type != NumberType) 
+    {
+        throw InterpreterSemanticError("Error: Invalid number of arguments for arctan, expected 2.");
+    }
+    return Expression(std::atan2(args[0].value.num_value, args[1].value.num_value));
+}
+
+Expression drawProcedure(const std::vector<Atom>& args)
+{
+    if (args.empty())
+    {
+        throw InterpreterSemanticError("Error: Draw procedure expects at least one argument.");
+    }
+
+    // Check each argument to ensure it's a graphical object and "draw" them
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        const auto& arg = args[i];
+       
+        if (arg.type == PointType)
+        {
+            return Expression(std::make_tuple(arg.value.point_value.x, arg.value.point_value.y));
+        }
+        else if (arg.type == LineType)
+        {
+            Point startPoint = arg.value.line_value.first;
+            Point endPoint = arg.value.line_value.second;
+            return Expression(std::make_tuple(startPoint.x, startPoint.y), std::make_tuple(endPoint.x, endPoint.y));
+        }
+        else if (arg.type == ArcType)
+        {
+            Point centerPoint = arg.value.arc_value.center;
+            Point startPoint = arg.value.arc_value.start;
+            double angle = arg.value.arc_value.span;
+            return Expression(std::make_tuple(centerPoint.x, centerPoint.y), std::make_tuple(startPoint.x, startPoint.y), angle);
+        }
+        else
+        {
+            throw InterpreterSemanticError("Error: Invalid argument for draw procedure. Expected point, line, or arc.");
+        }
+    }
+
+    // Return an expression of none type.
+    return Expression();
+}
+
+
 //Class constructor
 //Contains built in symbols and procedures
-Environment::Environment() 
+Environment::Environment()
 {
     //Built in symbols
     addSymbol("pi", Expression(atan2(0, -1)));
@@ -212,10 +349,20 @@ Environment::Environment()
     addProcedure("/", divideProcedure);
     addProcedure("log10", log10Procedure);
     addProcedure("pow", powProcedure);
+
+    // Procedures for graphical operations
+    addProcedure("draw", drawProcedure);
+    addProcedure("point", pointProcedure);
+    addProcedure("line", lineProcedure);
+    addProcedure("arc", arcProcedure);
+    addProcedure("sin", sinProcedure);
+    addProcedure("cos", cosProcedure);
+    addProcedure("arctan", arctanProcedure);
+
 }
 
 //Adds a given symbol to the environment
-void Environment::addSymbol(const Symbol& symbol, const Expression& value) 
+void Environment::addSymbol(const Symbol& symbol, const Expression& value)
 {
     EnvResult result;
     result.type = ExpressionType;
@@ -249,6 +396,8 @@ bool Environment::isSymbolDefined(const Symbol& symbol)
     return envmap.find(symbol) != envmap.end();
 }
 
+
+
 //Evaluates procedure based on type
 /*
 * This function takes a symbol and a vector of arguments and looks up the symbol
@@ -266,28 +415,26 @@ Expression Environment::evaluateProcedure(const Symbol& symbol, const std::vecto
 
         for (const auto& exp : args)
         {
-            Atom atom;
+            Atom atom = exp.head; // Directly use the head of the Expression as the Atom
 
-            // If the expression represents an atomic value (number or boolean)
-            if (exp.head.type == NumberType || exp.head.type == BooleanType) 
-            {
-                atom = exp.head;
-            }
-            // Otherwise, if it's a symbol, attempt to convert it
-            else if (exp.head.type == SymbolType && !token_to_atom(exp.head.value.sym_value, atom))
+            // Check if the Atom is of a type that needs to be converted to another Atom type
+            if (atom.type == SymbolType && !token_to_atom(atom.value.sym_value, atom))
             {
                 throw InterpreterSemanticError("Error: Failed to convert symbol to atom.");
             }
-            else 
+            
+            if (atom.type != NumberType && atom.type != BooleanType &&
+                atom.type != PointType && atom.type != LineType && atom.type != ArcType)
             {
+                // If the atom type is not one of the expected types, throw an error
                 throw InterpreterSemanticError("Error: Unexpected expression type.");
             }
+
             atomArgs.push_back(atom);
         }
+
         return it->second.proc(atomArgs);
     }
+
     throw InterpreterSemanticError("Error: Symbol not found or not associated with a procedure.");
 }
-
-
-
