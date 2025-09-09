@@ -1,2 +1,8 @@
 # SLISP-Interpreter
-This is a C++ program that interprets SLISP code. The program executes the code and returns the output values. The program takes a command argument -e to execute a code through command. The following command is an example "./slisp -e (+ (2 (3)))". The program would return 6. The program also takes files in the form of "./slisp file.slp". Lastly, the program takes prompts when the command "./slisp" is entered. To exit the prompt enter the EOF character for your system. The program uses QT library for GUI.
+This is a C++ program that interprets SLISP code. The program executes the code and returns the output values. The program takes a command argument -e to execute a code through command. 
+
+
+Ways to run the progra:
+1. "./slisp -e (+ (2 (3)))"  through commands, the program would return 6. 
+2. "./slisp file.slp" through .slp code file
+
